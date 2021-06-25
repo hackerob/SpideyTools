@@ -1,7 +1,7 @@
 Function Import-Har {
     <#
         .SYNOPSIS
-            Import an HAR for analysis.
+            Import an HAR for analysis. HAR = HTTP Archive Format
 
         .EXAMPLE
             Import-Har ./testsite.har
@@ -64,12 +64,12 @@ Function Get-HREFLinks {
     $HrefRegex1 = "href=(\\`"|`"|')(.*?)(\\`"|`"|')"
     $ResponseData | Select-String -Pattern $HrefRegex1 -allmatches | 
         ForEach-Object { $_.matches.value } | Select-String -Pattern $HrefRegex1 | 
-        ForEach-Object { $_.matches.groups[2].value } | Sort-Object -u
+        ForEach-Object { $_.matches.groups[2].value -replace "^//","http(s)://" } | Sort-Object -u
     #href","
-    $HrefRegex2 = "href`"(,|: )`"(.*?)`""
+    $HrefRegex2 = "href(`"|')(,|: )(`"|')(.*?)(`"|')"
     $ResponseData | Select-String -Pattern $HrefRegex2 -allmatches |
         ForEach-Object { $_.matches.value } | Select-String -Pattern $HrefRegex2 |
-        ForEach-Object { $_.matches.groups[2].value } | Sort-Object -u
+        ForEach-Object { $_.matches.groups[4].value -replace "^//","http(s)://" } | Sort-Object -u
     }
 }
 
@@ -81,10 +81,10 @@ Function Get-JSLinks {
         $ResponseData = $Global:ParsedHAR.log.entries.response.content
     )
     process {
-        $JSRegex = "`"(\.?/[a-zA-Z0-9?=./-]*)`""
+        $JSRegex = "(`"|')(\.?/[a-zA-Z0-9?=./-]*)(`"|')"
         $ResponseData | Select-String -pattern  $JSRegex -allmatches | 
             ForEach-Object { $_.matches.value} | Select-String -Pattern $JSRegex | 
-            ForEach-Object { $_.matches.groups[1].value } | Sort-Object -u
+            ForEach-Object { $_.matches.groups[2].value -replace "^//","http(s)://" } | Sort-Object -u
     }
 }
 
